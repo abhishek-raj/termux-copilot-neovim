@@ -89,6 +89,7 @@ No proot or Ubuntu installation is needed once this is applied.
 | `bin/cdev` → `$PREFIX/bin/cdev` | Opens Copilot, Neovim and a shell as tmux tabs |
 | `bin/vscode` → `$PREFIX/bin/vscode` | Starts code-server and opens it in the browser |
 | `bin/vscode-stop` → `$PREFIX/bin/vscode-stop` | Stops the code-server started by `vscode` |
+| `bin/git-credential-manager-termux` → `$PREFIX/bin/` | Runs Git Credential Manager on Termux's .NET (see GitHub credentials) |
 | `config/bashrc.sh` → appended to `~/.bashrc` | `copilot` wrapper that always runs inside tmux |
 | `config/termux.properties` → appended to `~/.termux/termux.properties` | ⌨ keyboard toggle button |
 | `config/code-server/settings.json` | VS Code settings: auto-save, inline diffs on small screens |
@@ -158,6 +159,32 @@ Files that Copilot edits reload automatically and show a "Reloaded" message.
   chat and inline suggestions, as in desktop VS Code. You can still use the Copilot
   CLI alongside it.
 - To stop it, run `vscode-stop`. It uses the process number `vscode` saved in `~/.cache/code-server.pid`, and finds the running code-server if that file is missing.
+
+## GitHub credentials (encrypted, no plain-text token)
+
+`scripts/setup-git-credentials.sh` sets up [Git Credential Manager](https://github.com/git-ecosystem/git-credential-manager)
+so that git signs in to GitHub through the browser and stores the login **encrypted with GPG** (in `pass`'s store,
+`~/.password-store`), instead of a plain-text token in `~/.git-credentials`.
+
+Run it in a normal Termux tab, because it asks you to choose a GPG passphrase:
+
+```bash
+GITHUB_USER=<your-github-login> bash scripts/setup-git-credentials.sh
+```
+
+On your first `git push`, it shows a code to enter at https://github.com/login/device.
+**Check which GitHub account the browser is signed in to before approving**, especially if you
+use one account for Copilot and another for your repos.
+
+- **Termux workaround:** Termux's `git-credential-manager` 3.0.2 asks for .NET 10.0.14, but
+  Termux only ships 10.0.13, so it won't start. `bin/git-credential-manager-termux` runs it on
+  the installed .NET instead, and git is set to `credential.helper manager-termux`.
+- **Settings it applies (global git config):** `credentialStore gpg`, `gpgPath $PREFIX/bin/gpg`,
+  `gitHubAuthModes device`, and `credential.https://github.com.username` (if `GITHUB_USER` is set).
+  It also adds `export GPG_TTY=$(tty)` to `~/.bashrc`, so gpg can ask for the passphrase.
+- **If you forget the GPG passphrase:** the stored logins can't be recovered. Delete
+  `~/.password-store` and the key (`gpg --delete-secret-and-public-key <id>`), run the script
+  again, and sign in again. Your GitHub account and repos aren't affected.
 
 ## Uninstall
 
