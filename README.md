@@ -205,6 +205,13 @@ use one account for Copilot and another for your repos.
   `~/.password-store` and the key (`gpg --delete-secret-and-public-key <id>`), run the script
   again, and sign in again. Your GitHub account and repos aren't affected.
 
+## Acknowledgements
+
+- [NilsSei/copilot-termux-setup](https://github.com/NilsSei/copilot-termux-setup), an earlier
+  script for running Copilot CLI on Termux (it rebuilds native Node modules). It was the starting
+  point for this work. This repo uses a different approach (the glibc launcher) and contains no
+  code from it.
+
 ## Uninstall
 
 ```bash
