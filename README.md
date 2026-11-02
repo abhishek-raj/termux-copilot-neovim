@@ -88,6 +88,7 @@ No proot or Ubuntu installation is needed once this is applied.
 | `config/tmux.conf` → `~/.tmux.conf` | Mouse/touch on, focus events, tab-style status bar |
 | `bin/cdev` → `$PREFIX/bin/cdev` | Opens Copilot, Neovim and a shell as tmux tabs |
 | `bin/vscode` → `$PREFIX/bin/vscode` | Starts code-server and opens it in the browser |
+| `bin/vscode-stop` → `$PREFIX/bin/vscode-stop` | Stops the code-server started by `vscode` |
 | `config/bashrc.sh` → appended to `~/.bashrc` | `copilot` wrapper that always runs inside tmux |
 | `config/termux.properties` → appended to `~/.termux/termux.properties` | ⌨ keyboard toggle button |
 | `config/code-server/settings.json` | VS Code settings: auto-save, inline diffs on small screens |
@@ -104,6 +105,7 @@ git init && git add -A && git commit -m init   # diffs need a git repo with a fi
 cdev                                           # tabs: 1 copilot | 2 editor | 3 shell
 cdev --split                                   # Neovim on top, Copilot below
 vscode                                         # VS Code in the browser; prints the password
+vscode-stop                                    # stop it again
 ```
 
 Switch tmux tabs by tapping them in the status bar or pressing **Alt+1/2/3**.
@@ -155,12 +157,12 @@ Files that Copilot edits reload automatically and show a "Reloaded" message.
   needs installing. Click the Copilot/Accounts icon and sign in with GitHub to get
   chat and inline suggestions, as in desktop VS Code. You can still use the Copilot
   CLI alongside it.
-- To stop it, run `pgrep -f code-server`, then `kill <pid>`.
+- To stop it, run `vscode-stop`. It uses the process number `vscode` saved in `~/.cache/code-server.pid`, and finds the running code-server if that file is missing.
 
 ## Uninstall
 
 ```bash
-rm -f $PREFIX/bin/cdev $PREFIX/bin/vscode
+vscode-stop; rm -f $PREFIX/bin/cdev $PREFIX/bin/vscode $PREFIX/bin/vscode-stop
 rm -rf ~/.config/nvim ~/.local/share/nvim ~/.tmux.conf
 # Then remove the copilot() block from ~/.bashrc and the extra-keys lines from
 # ~/.termux/termux.properties (or restore the *.bak-* files).

@@ -48,9 +48,9 @@ backup_copy "$HERE/config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 info "tmux config"
 backup_copy "$HERE/config/tmux.conf" "$HOME/.tmux.conf"
 
-info "Launchers: cdev, vscode"
+info "Launchers: cdev, vscode, vscode-stop"
 install -m 755 "$HERE/bin/cdev" "$PREFIX/bin/cdev"
-install -m 755 "$HERE/bin/vscode" "$PREFIX/bin/vscode"
+install -m 755 "$HERE/bin/vscode" "$HERE/bin/vscode-stop" "$PREFIX/bin/"
 
 info "Copilot tmux wrapper in ~/.bashrc"
 touch "$HOME/.bashrc"

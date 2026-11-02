@@ -1,10 +1,14 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# vscode [dir]  -> start code-server (VS Code in browser) and open it
+# vscode [dir]  -> start code-server (VS Code in browser) and open it. Stop with: vscode-stop
 dir="$(cd "${1:-$PWD}" && pwd)" || exit 1
+pidfile="$HOME/.cache/code-server.pid"
+mkdir -p "$HOME/.cache"
 if ! curl -s -o /dev/null http://127.0.0.1:8080/healthz; then
   nohup code-server >"$HOME/.cache/code-server.log" 2>&1 &
+  echo $! > "$pidfile"
   for i in $(seq 1 40); do curl -s -o /dev/null http://127.0.0.1:8080/healthz && break; sleep 0.5; done
 fi
 echo "VS Code: http://127.0.0.1:8080/?folder=$dir"
 echo "Password: $(grep '^password:' ~/.config/code-server/config.yaml | cut -d' ' -f2)"
+echo "Stop with: vscode-stop"
 termux-open-url "http://127.0.0.1:8080/?folder=$dir"

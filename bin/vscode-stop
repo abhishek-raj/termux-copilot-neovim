@@ -1,0 +1,17 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# vscode-stop  -> stop the code-server started by `vscode`
+pidfile="$HOME/.cache/code-server.pid"
+pid="$(cat "$pidfile" 2>/dev/null)"
+is_cs() { [ -n "$1" ] && ps -o args= -p "$1" 2>/dev/null | grep -q 'code-server'; }
+if ! is_cs "$pid"; then
+  # pidfile missing/stale: fall back to the main code-server process
+  pid="$(pgrep -of 'lib/code-server/lib/node')"
+fi
+if ! is_cs "$pid"; then
+  rm -f "$pidfile"; echo "code-server is not running."; exit 0
+fi
+kill "$pid"
+for i in $(seq 1 20); do kill -0 "$pid" 2>/dev/null || break; sleep 0.5; done
+kill -0 "$pid" 2>/dev/null && { echo "Still running; forcing."; kill -9 "$pid"; }
+rm -f "$pidfile"
+echo "code-server stopped (pid $pid)."
