@@ -1,0 +1,13 @@
+{
+  "workbench.colorTheme": "Default Dark Modern",
+  "files.autoSave": "afterDelay",
+  "git.autoRepositoryDetection": "openEditors",
+  "git.openRepositoryInParentFolders": "always",
+  "scm.diffDecorations": "all",
+  "diffEditor.renderSideBySide": true,
+  "diffEditor.useInlineViewWhenSpaceIsLimited": true,
+  "editor.minimap.enabled": false,
+  "workbench.startupEditor": "none",
+  "security.workspace.trust.enabled": false,
+  "telemetry.telemetryLevel": "off"
+}

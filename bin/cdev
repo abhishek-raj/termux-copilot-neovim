@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# cdev [dir] [--split]  -> tmux workspace: Copilot CLI + Neovim watching the same folder
+dir="${1:-$PWD}"; [ "$1" = "--split" ] && dir="$PWD"
+dir="$(cd "$dir" && pwd)" || exit 1
+name="dev-$(basename "$dir" | tr '.:' '__')"
+if ! tmux has-session -t "$name" 2>/dev/null; then
+  if [[ " $* " == *" --split "* ]]; then
+    tmux new-session -d -s "$name" -n work -c "$dir" "nvim -c 'Neotree show'"
+    tmux split-window -v -l 55% -t "$name:work" -c "$dir" copilot
+  else
+    tmux new-session -d -s "$name" -n copilot -c "$dir" copilot
+    tmux new-window -d -t "$name:2" -n editor -c "$dir" "nvim -c 'Neotree show'"
+    tmux new-window -d -t "$name:3" -n shell -c "$dir"
+  fi
+fi
+[ -n "$TMUX" ] && exec tmux switch-client -t "$name" || exec tmux attach -t "$name"
