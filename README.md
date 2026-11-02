@@ -17,15 +17,28 @@ There are two ways to view changes:
 
 ```bash
 pkg install -y git
-git clone <this-repo> ~/p/termux-copilot-neovim   # or copy the folder
+git clone https://github.com/abhishek-raj/termux-copilot-neovim.git ~/p/termux-copilot-neovim
 cd ~/p/termux-copilot-neovim
 bash install.sh
-copilot            # then /login
 ```
 
-Options (environment variables):
-- `SKIP_COPILOT=1` skips installing and repairing Copilot CLI, if yours already works.
-- `SKIP_CODE_SERVER=1` skips VS Code in the browser.
+The installer shows a menu. Pick parts by number (for example `1 2 4`), press Enter for the
+recommended set, or type `a` for everything. Parts already set up are marked `[installed]`.
+
+| # | Part | What it does |
+|---|---|---|
+| 1 | `copilot` | Installs Copilot CLI and makes it run in native Termux (see Step 1) |
+| 2 | `scroll` | Runs `copilot` inside tmux so swipe-scrolling works |
+| 3 | `keyboard` | Adds a ⌨ button to the extra-keys bar to open the keyboard |
+| 4 | `neovim` | Neovim config + `cdev` workspace for watching Copilot's changes live |
+| 5 | `vscode` | code-server (VS Code in the browser) with `vscode` / `vscode-stop` |
+| 6 | `creds` | Encrypted GitHub login for git (asks you to choose a passphrase) |
+| 7 | `gh` | GitHub CLI using that encrypted login (adds `creds` if needed) |
+
+Recommended (Enter): `copilot scroll keyboard neovim`. Without the menu:
+`bash install.sh copilot scroll`, `bash install.sh all`, or `bash install.sh --help`.
+If a part fails, the others still run, and the installer prints the command to retry it.
+Then run `source ~/.bashrc` and start `copilot` (`/login` on first run).
 
 Neovim 0.12 or newer is required, because the config uses the built-in `vim.pack` plugin manager.
 An ARM64 (aarch64) phone is required for Copilot CLI.
@@ -34,7 +47,7 @@ The installer is safe to re-run. Any file it replaces is backed up as `*.bak-<ti
 
 ## Step 1: getting Copilot CLI to run in native Termux
 
-`install.sh` does this automatically. The details are here for troubleshooting.
+`bash install.sh copilot` does this automatically. The details are here for troubleshooting.
 This was confirmed working with Copilot CLI **1.0.105**; it's a workaround, not
 official Termux support.
 
@@ -77,8 +90,6 @@ version may have changed. To undo, `cp -p <backup> $PREFIX/bin/copilot`.
 
 No proot or Ubuntu installation is needed once this is applied.
 
-## Step 2: viewing changes (editor setup)
-
 ## What gets installed
 
 | File | Purpose |
@@ -90,13 +101,14 @@ No proot or Ubuntu installation is needed once this is applied.
 | `bin/vscode` → `$PREFIX/bin/vscode` | Starts code-server and opens it in the browser |
 | `bin/vscode-stop` → `$PREFIX/bin/vscode-stop` | Stops the code-server started by `vscode` |
 | `bin/git-credential-manager-termux` → `$PREFIX/bin/` | Runs Git Credential Manager on Termux's .NET (see GitHub credentials) |
-| `config/bashrc.sh` → appended to `~/.bashrc` | `copilot` wrapper that always runs inside tmux |
+| `config/bashrc.d/copilot-tmux.sh` → appended to `~/.bashrc` | `copilot` wrapper that always runs inside tmux |
+| `config/bashrc.d/gh.sh` → appended to `~/.bashrc` | `gh` wrapper that uses the encrypted login (see GitHub credentials) |
 | `config/termux.properties` → appended to `~/.termux/termux.properties` | ⌨ keyboard toggle button |
 | `config/code-server/settings.json` | VS Code settings: auto-save, inline diffs on small screens |
 
-Packages installed: `nodejs` (if missing), `glibc-repo glibc-runner` for Copilot,
-`neovim tmux lazygit ripgrep fd git termux-api`, plus
-`tur-repo code-server` unless you skip code-server.
+Packages, by part: `copilot` → `nodejs` (if missing) `glibc-repo glibc-runner`;
+`scroll` → `tmux`; `neovim` → `neovim tmux lazygit ripgrep fd git termux-api`;
+`vscode` → `tur-repo code-server`; `creds` → `git-credential-manager pass gnupg`; `gh` → `gh`.
 
 ## Usage
 
@@ -166,7 +178,8 @@ Files that Copilot edits reload automatically and show a "Reloaded" message.
 so that git signs in to GitHub through the browser and stores the login **encrypted with GPG** (in `pass`'s store,
 `~/.password-store`), instead of a plain-text token in `~/.git-credentials`.
 
-Run it in a normal Termux tab, because it asks you to choose a GPG passphrase:
+`bash install.sh creds` runs it (it asks for your GitHub username). Run it in a normal Termux tab,
+because it asks you to choose a GPG passphrase. To run it directly:
 
 ```bash
 GITHUB_USER=<your-github-login> bash scripts/setup-git-credentials.sh
@@ -182,6 +195,12 @@ use one account for Copilot and another for your repos.
 - **Settings it applies (global git config):** `credentialStore gpg`, `gpgPath $PREFIX/bin/gpg`,
   `gitHubAuthModes device`, and `credential.https://github.com.username` (if `GITHUB_USER` is set).
   It also adds `export GPG_TTY=$(tty)` to `~/.bashrc`, so gpg can ask for the passphrase.
+- **GitHub CLI (`gh`):** `gh auth login` would store its token in plain text on Termux, because
+  there's no keyring for it. Instead, a `gh()` function in `~/.bashrc` (from `config/bashrc.d/gh.sh`)
+  borrows the encrypted login from Git Credential Manager each time it runs, so you don't run
+  `gh auth login` at all. That login has the `repo`, `gist` and `workflow` permissions, so
+  `gh repo create` works; organization commands that need `read:org` may not. Install with
+  `bash install.sh gh`.
 - **If you forget the GPG passphrase:** the stored logins can't be recovered. Delete
   `~/.password-store` and the key (`gpg --delete-secret-and-public-key <id>`), run the script
   again, and sign in again. Your GitHub account and repos aren't affected.
@@ -191,6 +210,6 @@ use one account for Copilot and another for your repos.
 ```bash
 vscode-stop; rm -f $PREFIX/bin/cdev $PREFIX/bin/vscode $PREFIX/bin/vscode-stop
 rm -rf ~/.config/nvim ~/.local/share/nvim ~/.tmux.conf
-# Then remove the copilot() block from ~/.bashrc and the extra-keys lines from
+# Then remove the copilot() and gh() blocks from ~/.bashrc and the extra-keys lines from
 # ~/.termux/termux.properties (or restore the *.bak-* files).
 ```

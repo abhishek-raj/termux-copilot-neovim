@@ -22,6 +22,10 @@ grep -q 'export GPG_TTY=' "$HOME/.bashrc" 2>/dev/null || \
   printf '\n# Lets gpg ask for its passphrase in the terminal (used by git credentials)\nexport GPG_TTY=$(tty)\n' >> "$HOME/.bashrc"
 
 if [ -z "$(gpg --list-secret-keys --with-colons 2>/dev/null | grep '^sec')" ]; then
+  if ! [ -t 0 ]; then
+    echo "No GPG key yet and no terminal to ask for a passphrase. Re-run this script in Termux." >&2
+    exit 1
+  fi
   name="$(git config --global user.name || echo termux)"
   email="$(git config --global user.email || echo termux@localhost)"
   echo "Creating a GPG key for \"$name <$email>\". Choose a passphrase and save it in your password manager."

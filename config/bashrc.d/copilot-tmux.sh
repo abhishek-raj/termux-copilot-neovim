@@ -7,6 +7,3 @@ copilot() {
     command copilot "$@"
   fi
 }
-
-# Lets gpg ask for its passphrase in the terminal (used by git credentials)
-export GPG_TTY=$(tty)
